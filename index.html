@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>$USELESS — Zero Utility. Maximum Vibes.</title>
+  <meta name="description" content="USELESS has zero utility, zero promises, zero roadmap. No bullshit. Maximum vibes. Built on X1 Blockchain." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=VT323&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #080808;
+      --green: #00ff41;
+      --red: #ff2d55;
+      --yellow: #ffe600;
+      --white: #f0f0f0;
+      --dim: #1a1a1a;
+      --border: #1f1f1f;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Share Tech Mono', monospace;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    /* SCANLINES */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.15) 2px,
+        rgba(0,0,0,0.15) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* NOISE */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 9998;
+      animation: noise 0.5s steps(2) infinite;
+    }
+
+    @keyframes noise {
+      0% { transform: translate(0,0); }
+      25% { transform: translate(-1%, 1%); }
+      50% { transform: translate(1%, -1%); }
+      75% { transform: translate(-1%, -1%); }
+      100% { transform: translate(0, 0); }
+    }
+
+    /* ---- TICKER ---- */
+    .ticker-bar {
+      background: var(--green);
+      color: #000;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 7px 0;
+      overflow: hidden;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .ticker-inner {
+      display: inline-flex;
+      animation: ticker 18s linear infinite;
+    }
+
+    .ticker-inner span {
+      margin: 0 40px;
+    }
+
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* ---- HERO ---- */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,65,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,65,0.04) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+    }
+
+    .hero-glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,255,65,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      animation: pulse-glow 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    .coin-wrapper {
+      position: relative;
+      margin-bottom: 30px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-14px); }
+    }
+
+    .coin {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffe600, #b89000);
+      border: 4px solid #ffe600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 42px;
+      color: #000;
+      box-shadow:
+        0 0 30px rgba(255,230,0,0.4),
+        0 0 80px rgba(255,230,0,0.15),
+        inset 0 -5px 15px rgba(0,0,0,0.3);
+      position: relative;
+      animation: spin-tilt 6s ease-in-out infinite;
+    }
+
+    @keyframes spin-tilt {
+      0%, 100% { transform: rotateY(0deg); }
+      50% { transform: rotateY(20deg); }
+    }
+
+    .coin-ring {
+      position: absolute;
+      inset: -10px;
+      border-radius: 50%;
+      border: 2px dashed rgba(255,230,0,0.3);
+      animation: ring-spin 10s linear infinite;
+    }
+
+    @keyframes ring-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(80px, 18vw, 180px);
+      line-height: 0.9;
+      letter-spacing: 0.02em;
+      color: var(--white);
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 .glitch {
+      position: relative;
+      display: inline-block;
+      color: var(--green);
+    }
+
+    .hero h1 .glitch::before,
+    .hero h1 .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+    }
+
+    .hero h1 .glitch::before {
+      color: var(--red);
+      clip: rect(0, 900px, 0, 0);
+      animation: glitch1 3s infinite;
+    }
+
+    .hero h1 .glitch::after {
+      color: #00cfff;
+      clip: rect(0, 900px, 0, 0);
+      animation: glitch2 3s infinite;
+    }
+
+    @keyframes glitch1 {
+      0%, 90%, 100% { clip: rect(0,0,0,0); transform: none; }
+      92% { clip: rect(20px,900px,40px,0); transform: translateX(-4px); }
+      94% { clip: rect(60px,900px,80px,0); transform: translateX(4px); }
+      96% { clip: rect(10px,900px,30px,0); transform: translateX(-2px); }
+    }
+
+    @keyframes glitch2 {
+      0%, 85%, 100% { clip: rect(0,0,0,0); transform: none; }
+      87% { clip: rect(50px,900px,70px,0); transform: translateX(3px); }
+      89% { clip: rect(5px,900px,25px,0); transform: translateX(-3px); }
+    }
+
+    .ticker-symbol {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(16px, 3vw, 24px);
+      color: var(--green);
+      letter-spacing: 0.3em;
+      margin-top: 8px;
+      opacity: 0.8;
+    }
+
+    .hero-tagline {
+      font-family: 'VT323', monospace;
+      font-size: clamp(22px, 4vw, 36px);
+      color: var(--yellow);
+      margin-top: 20px;
+      letter-spacing: 0.05em;
+      max-width: 700px;
+    }
+
+    .hero-tagline .blink {
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 16px;
+      margin-top: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 14px 32px;
+      border: 2px solid;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      transform: translateX(-100%);
+      transition: transform 0.2s;
+    }
+
+    .btn:hover::before { transform: translateX(0); }
+
+    .btn-green {
+      color: #000;
+      background: var(--green);
+      border-color: var(--green);
+      box-shadow: 0 0 20px rgba(0,255,65,0.4);
+    }
+
+    .btn-green::before { background: #00cc33; }
+    .btn-green:hover { box-shadow: 0 0 40px rgba(0,255,65,0.8); }
+
+    .btn-outline {
+      color: var(--white);
+      background: transparent;
+      border-color: #444;
+    }
+
+    .btn-outline::before { background: #1a1a1a; }
+    .btn-outline:hover { border-color: var(--white); }
+
+    .chain-badge {
+      margin-top: 28px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--dim);
+      border: 1px solid #2a2a2a;
+      padding: 8px 18px;
+      font-size: 12px;
+      color: #888;
+      letter-spacing: 0.1em;
+    }
+
+    .chain-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: dot-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes dot-pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--green); }
+      50% { opacity: 0.4; box-shadow: none; }
+    }
+
+    /* ---- ZERO SECTION ---- */
+    .zeros {
+      padding: 100px 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.4em;
+      color: #444;
+      text-transform: uppercase;
+      margin-bottom: 50px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #222;
+    }
+
+    .zeros-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1px;
+      background: #111;
+      border: 1px solid #111;
+    }
+
+    .zero-card {
+      background: var(--bg);
+      padding: 36px 30px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.2s;
+    }
+
+    .zero-card:hover {
+      background: #0d0d0d;
+    }
+
+    .zero-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--green);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s;
+    }
+
+    .zero-card:hover::after { transform: scaleX(1); }
+
+    .zero-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 72px;
+      line-height: 1;
+      color: #111;
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      pointer-events: none;
+    }
+
+    .zero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      color: var(--red);
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+
+    .zero-sub {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .zero-positive {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--green);
+      opacity: 0.8;
+    }
+
+    /* ---- MANIFESTO ---- */
+    .manifesto {
+      padding: 100px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .manifesto-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(255,45,85,0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 50%, rgba(0,255,65,0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .manifesto-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .manifesto h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(48px, 8vw, 90px);
+      line-height: 0.95;
+      margin-bottom: 40px;
+      color: var(--white);
+    }
+
+    .manifesto h2 em {
+      font-style: normal;
+      color: var(--yellow);
+    }
+
+    .manifesto-lines {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .mline {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 16px;
+      padding: 18px 0;
+      border-bottom: 1px solid #111;
+      font-size: clamp(16px, 3vw, 24px);
+      font-family: 'VT323', monospace;
+      letter-spacing: 0.05em;
+      opacity: 0;
+      animation: fadeup 0.5s ease forwards;
+    }
+
+    .mline:nth-child(1) { animation-delay: 0.2s; }
+    .mline:nth-child(2) { animation-delay: 0.4s; }
+    .mline:nth-child(3) { animation-delay: 0.6s; }
+
+    @keyframes fadeup {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .mline-bad {
+      color: var(--red);
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    .mline-arrow { color: #333; font-size: 20px; }
+
+    .mline-good {
+      color: var(--green);
+    }
+
+    /* ---- VIBES MARQUEE ---- */
+    .vibes-row {
+      padding: 24px 0;
+      overflow: hidden;
+      border-top: 1px solid #111;
+      border-bottom: 1px solid #111;
+      background: #050505;
+    }
+
+    .vibes-inner {
+      display: inline-flex;
+      gap: 0;
+      animation: vibes-scroll 20s linear infinite;
+      white-space: nowrap;
+    }
+
+    .vibes-inner span {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 0.08em;
+      padding: 0 40px;
+      color: #1a1a1a;
+    }
+
+    .vibes-inner span.highlight {
+      color: var(--yellow);
+    }
+
+    @keyframes vibes-scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* ---- DEGEN STATS ---- */
+    .stats {
+      padding: 80px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1px;
+      background: #0f0f0f;
+      border: 1px solid #0f0f0f;
+    }
+
+    .stat-block {
+      background: var(--bg);
+      padding: 30px 24px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      color: var(--green);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #444;
+      letter-spacing: 0.2em;
+      margin-top: 6px;
+    }
+
+    /* ---- FAQ ---- */
+    .faq {
+      padding: 80px 20px 100px;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      border-bottom: 1px solid #111;
+    }
+
+    .faq-q {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--white);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 15px;
+      text-align: left;
+      padding: 22px 0;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      letter-spacing: 0.03em;
+    }
+
+    .faq-q span.arrow {
+      color: var(--green);
+      font-size: 18px;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .faq-item.open .faq-q span.arrow {
+      transform: rotate(45deg);
+    }
+
+    .faq-a {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.7;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s;
+      padding-bottom: 0;
+    }
+
+    .faq-item.open .faq-a {
+      max-height: 200px;
+      padding-bottom: 20px;
+    }
+
+    /* ---- FOOTER ---- */
+    footer {
+      border-top: 1px solid #111;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: #444;
+      text-decoration: none;
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--green); }
+
+    .footer-disclaimer {
+      font-size: 11px;
+      color: #2a2a2a;
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ---- SCROLL ANIM ---- */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ---- RESPONSIVE ---- */
+    @media (max-width: 600px) {
+      .zeros-grid { grid-template-columns: 1fr; }
+      .cta-group { flex-direction: column; align-items: center; }
+      .btn { width: 100%; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TICKER -->
+  <div class="ticker-bar" aria-hidden="true">
+    <div class="ticker-inner">
+      <span>$USELESS &bull; ZERO UTILITY &bull; MAXIMUM VIBES &bull; X1 BLOCKCHAIN &bull; NO ROADMAP &bull; NO DELAYS &bull; NO BULLSHIT &bull; PURE CHAOS &bull; DEGEN ONLY &bull; NO UTILITY = NO DISAPPOINTMENT &bull;</span>
+      <span>$USELESS &bull; ZERO UTILITY &bull; MAXIMUM VIBES &bull; X1 BLOCKCHAIN &bull; NO ROADMAP &bull; NO DELAYS &bull; NO BULLSHIT &bull; PURE CHAOS &bull; DEGEN ONLY &bull; NO UTILITY = NO DISAPPOINTMENT &bull;</span>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg-grid"></div>
+    <div class="hero-glow"></div>
+
+    <div class="coin-wrapper">
+      <div class="coin">
+        $U
+        <div class="coin-ring"></div>
+      </div>
+    </div>
+
+    <h1>
+      <span class="glitch" data-text="USELESS">USELESS</span>
+    </h1>
+    <div class="ticker-symbol">$USELESS &nbsp;/&nbsp; X1 BLOCKCHAIN</div>
+    <p class="hero-tagline">
+      zero utility. zero promises. zero roadmap.<br>
+      maximum vibes. pure chaos.<span class="blink">_</span>
+    </p>
+
+    <div class="cta-group">
+      <a href="https://staging.degen.fyi/token/mainnetX1/FNTAYeScNadrUFnKTeaxnosR9no7rWpQoKuSD4zyZDV3" target="_blank" rel="noopener" class="btn btn-green">Buy $USELESS</a>
+      <a href="https://x.com/UselessCOIN_x1" target="_blank" rel="noopener" class="btn btn-outline">Follow on X</a>
+    </div>
+
+    <div class="chain-badge">
+      <div class="chain-dot"></div>
+      LIVE ON X1 BLOCKCHAIN
+    </div>
+  </section>
+
+  <!-- VIBES ROW -->
+  <div class="vibes-row" aria-hidden="true">
+    <div class="vibes-inner">
+      <span>DEGEN</span><span class="highlight">♦</span>
+      <span>ZERO UTILITY</span><span class="highlight">♦</span>
+      <span>MAXIMUM VIBES</span><span class="highlight">♦</span>
+      <span>NO BS</span><span class="highlight">♦</span>
+      <span>PURE CHAOS</span><span class="highlight">♦</span>
+      <span>X1 BLOCKCHAIN</span><span class="highlight">♦</span>
+      <span>WE ARE HERE TO DEGEN</span><span class="highlight">♦</span>
+      <span>DEGEN</span><span class="highlight">♦</span>
+      <span>ZERO UTILITY</span><span class="highlight">♦</span>
+      <span>MAXIMUM VIBES</span><span class="highlight">♦</span>
+      <span>NO BS</span><span class="highlight">♦</span>
+      <span>PURE CHAOS</span><span class="highlight">♦</span>
+      <span>X1 BLOCKCHAIN</span><span class="highlight">♦</span>
+      <span>WE ARE HERE TO DEGEN</span><span class="highlight">♦</span>
+    </div>
+  </div>
+
+  <!-- ZEROS -->
+  <section class="zeros reveal">
+    <div class="section-label">// The Zeros</div>
+    <div class="zeros-grid">
+
+      <div class="zero-card">
+        <div class="zero-num">0</div>
+        <div class="zero-title">Zero Utility</div>
+        <div class="zero-sub">It does nothing. Absolutely nothing. And we're proud of it.</div>
+        <div class="zero-positive">→ No utility = No disappointment</div>
+      </div>
+
+      <div class="zero-card">
+        <div class="zero-num">0</div>
+        <div class="zero-title">Zero Roadmap</div>
+        <div class="zero-sub">No Q2 goals. No partnerships pending. No version 2.0. Just vibes.</div>
+        <div class="zero-positive">→ No roadmap = No delays</div>
+      </div>
+
+      <div class="zero-card">
+        <div class="zero-num">0</div>
+        <div class="zero-title">Zero Tokenomics</div>
+        <div class="zero-sub">No vesting schedules. No team allocations. No whale mechanics. Nothing.</div>
+        <div class="zero-positive">→ No tokenomics = No bullshit</div>
+      </div>
+
+      <div class="zero-card">
+        <div class="zero-num">0</div>
+        <div class="zero-title">Zero Promises</div>
+        <div class="zero-sub">We will not do anything. We cannot disappoint you if we never tried.</div>
+        <div class="zero-positive">→ No promises = No lies</div>
+      </div>
+
+      <div class="zero-card">
+        <div class="zero-num">0</div>
+        <div class="zero-title">Zero Gaslighting</div>
+        <div class="zero-sub">No "we're building in silence." No "big announcement soon." Just nothing.</div>
+        <div class="zero-positive">→ No gaslighting = Refreshing honesty</div>
+      </div>
+
+      <div class="zero-card">
+        <div class="zero-num">∞</div>
+        <div class="zero-title">Max Vibes</div>
+        <div class="zero-sub">This is the only metric that matters. And we're over-delivering every day.</div>
+        <div class="zero-positive">→ Chaos = Culture</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- MANIFESTO -->
+  <section class="manifesto reveal">
+    <div class="manifesto-bg"></div>
+    <div class="manifesto-inner">
+      <div class="section-label" style="justify-content:center;">// Manifesto</div>
+      <h2>We are <em>done</em> pretending.</h2>
+
+      <div class="manifesto-lines">
+        <div class="mline">
+          <span class="mline-bad">NO UTILITY</span>
+          <span class="mline-arrow">=</span>
+          <span class="mline-good">NO DISAPPOINTMENT</span>
+        </div>
+        <div class="mline">
+          <span class="mline-bad">NO ROADMAP</span>
+          <span class="mline-arrow">=</span>
+          <span class="mline-good">NO DELAYS</span>
+        </div>
+        <div class="mline">
+          <span class="mline-bad">NO TOKENOMICS</span>
+          <span class="mline-arrow">=</span>
+          <span class="mline-good">NO BULLSHIT</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats reveal">
+    <div class="section-label">// By the numbers</div>
+    <div class="stats-grid">
+      <div class="stat-block">
+        <div class="stat-value">0</div>
+        <div class="stat-label">Promises Made</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-value">0</div>
+        <div class="stat-label">Roadmap Items</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-value">0</div>
+        <div class="stat-label">VCs Consulted</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-value">∞</div>
+        <div class="stat-label">Vibes Delivered</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-value">100%</div>
+        <div class="stat-label">Chaos Level</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq reveal">
+    <div class="section-label">// FAQ</div>
+
+    <div class="faq-item">
+      <button class="faq-q">What can I do with $USELESS? <span class="arrow">+</span></button>
+      <div class="faq-a">Nothing. That's the whole point. You hold it. You vibe. You degen. The end.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q">Is there a whitepaper? <span class="arrow">+</span></button>
+      <div class="faq-a">Lol. No. A whitepaper would imply we have something to explain. We don't. We're USELESS.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q">What blockchain is this on? <span class="arrow">+</span></button>
+      <div class="faq-a">X1 Blockchain. We chose it because we're degens and we do what we want.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q">Rug risk? <span class="arrow">+</span></button>
+      <div class="faq-a">We can't rug you if we never promised you anything in the first place. We're transparent about being non-transparent.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q">When moon? <span class="arrow">+</span></button>
+      <div class="faq-a">We have no roadmap. We have no timeline. We have vibes. The moon is a state of mind.</div>
+    </div>
+
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-links">
+      <a href="https://x.com/UselessCOIN_x1" target="_blank" rel="noopener">Twitter / X</a>
+      <a href="#" target="_blank">Telegram</a>
+      <a href="https://staging.degen.fyi/token/mainnetX1/FNTAYeScNadrUFnKTeaxnosR9no7rWpQoKuSD4zyZDV3" target="_blank" rel="noopener">Buy $USELESS</a>
+      <a href="#" target="_blank">Contract</a>
+    </div>
+    <div class="footer-disclaimer">
+      $USELESS is a memecoin with zero utility, zero promises, and zero expectations. This is not financial advice. This is not any kind of advice. We told you it was useless.
+    </div>
+  </footer>
+
+  <script>
+    // FAQ accordion
+    document.querySelectorAll('.faq-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.faq-item');
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+      });
+    });
+
+    // Scroll reveal
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
