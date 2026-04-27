@@ -142,40 +142,55 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 2px;
-      background: #111;
-      border: 1px solid #1a1a1a;
-      width: 90px;
-      height: 90px;
+      background: #ff2d55;
+      border: 2px solid #ff2d55;
+      box-shadow: 0 0 18px rgba(255,45,85,0.35), 0 0 40px rgba(255,45,85,0.1);
+      width: 96px;
+      height: 96px;
     }
 
     .mini-cell {
-      background: var(--bg);
+      background: #0f0005;
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 18px;
+      font-size: 20px;
       cursor: pointer;
       transition: background 0.1s;
       position: relative;
     }
-    .mini-cell:hover:not(.taken):not(.locked) { background: #111; }
+    .mini-cell:hover:not(.taken):not(.locked) {
+      background: #1a0008;
+    }
+    .mini-cell:hover:not(.taken):not(.locked)::after {
+      content: 'X';
+      color: rgba(0,255,65,0.2);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: inherit;
+      position: absolute;
+    }
     .mini-cell.taken, .mini-cell.locked { cursor: default; }
     .mini-cell .mmark { animation: mpop 0.15s ease-out; display: block; line-height: 1; }
     @keyframes mpop { from { transform: scale(0.3); opacity:0; } to { transform: scale(1); opacity:1; } }
-    .mini-x { color: var(--green); }
-    .mini-o { color: var(--red); }
-    .mini-cell.mini-win { background: #0d0d0d; box-shadow: inset 0 0 0 1px var(--yellow); }
+    .mini-x { color: var(--green); text-shadow: 0 0 8px rgba(0,255,65,0.8); }
+    .mini-o { color: #fff; text-shadow: 0 0 8px rgba(255,45,85,0.8); }
+    .mini-cell.mini-win {
+      background: #200010;
+      box-shadow: inset 0 0 0 1px var(--yellow);
+    }
 
     .mini-label {
       font-size: 8px;
       letter-spacing: 0.2em;
-      color: #222;
+      color: #ff2d55;
       text-align: center;
       cursor: pointer;
       transition: color 0.2s;
+      opacity: 0.6;
+      text-shadow: 0 0 8px rgba(255,45,85,0.4);
     }
-    .mini-label:hover { color: var(--green); }
+    .mini-label:hover { color: #ff2d55; opacity: 1; }
 
     @media (max-width: 700px) {
       .side-game { display: none; }
@@ -193,8 +208,9 @@
       width: 100%;
       max-width: 360px;
       margin: 0 auto;
-      border: 1px solid #111;
+      border: 2px solid #ff2d55;
       background: #050505;
+      box-shadow: 0 0 30px rgba(255,45,85,0.2), 0 0 80px rgba(255,45,85,0.06);
       position: relative;
       overflow: hidden;
     }
@@ -1204,10 +1220,17 @@
       setTimeout(() => {
         const empty = state.board.map((v,i) => v ? null : i).filter(i => i !== null);
         if (!empty.length) return;
-        // Simple bot: win > block > random
+        // Smart bot: win > block > centre > corner > random
         let move = -1;
+        // 1. Take win
         for (const m of empty) { const t=[...state.board]; t[m]='O'; if (miniGetWin(t)) { move=m; break; } }
+        // 2. Block player win
         if (move === -1) for (const m of empty) { const t=[...state.board]; t[m]='X'; if (miniGetWin(t)) { move=m; break; } }
+        // 3. Take centre
+        if (move === -1 && !state.board[4]) move = 4;
+        // 4. Take corner
+        if (move === -1) { const c=[0,2,6,8].filter(i=>!state.board[i]); if(c.length) move=c[Math.floor(Math.random()*c.length)]; }
+        // 5. Random
         if (move === -1) move = empty[Math.floor(Math.random()*empty.length)];
         miniPlace(boardId, state, move, 'O');
         if (miniCheckEnd(boardId, state)) return;
