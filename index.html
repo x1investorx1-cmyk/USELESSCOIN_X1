@@ -69,6 +69,48 @@
       100% { transform: translate(0, 0); }
     }
 
+    /* ---- CONTRACT ADDRESS STRIP ---- */
+    .ca-strip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 24px;
+      background: #0d0d0d;
+      border: 1px solid rgba(0,255,65,0.3);
+      padding: 12px 20px;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+      transition: border-color 0.2s, background 0.2s;
+      max-width: 100%;
+    }
+    .ca-strip:hover {
+      border-color: var(--green);
+      background: #111;
+      box-shadow: 0 0 20px rgba(0,255,65,0.15);
+    }
+    .ca-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--green);
+      flex-shrink: 0;
+    }
+    .ca-address {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      color: var(--white);
+      letter-spacing: 0.05em;
+      word-break: break-all;
+    }
+    .ca-copy-icon {
+      font-size: 16px;
+      color: var(--green);
+      flex-shrink: 0;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .ca-strip:hover .ca-copy-icon { opacity: 1; }
+
     /* ---- TICKER ---- */
     .ticker-bar {
       background: var(--green);
@@ -715,6 +757,12 @@
       maximum vibes. pure chaos.<span class="blink">_</span>
     </p>
 
+    <div class="ca-strip" onclick="copyCA2()" title="Click to copy">
+      <span class="ca-label">CA:</span>
+      <span class="ca-address">FNTAYeScNadrUFnKTeaxnosR9no7rWpQoKuSD4zyZDV3</span>
+      <span class="ca-copy-icon">⧉</span>
+    </div>
+
     <div class="cta-group">
       <a href="https://staging.degen.fyi/token/mainnetX1/FNTAYeScNadrUFnKTeaxnosR9no7rWpQoKuSD4zyZDV3" target="_blank" rel="noopener" class="btn btn-green">Buy $USELESS</a>
       <a href="https://x.com/UselessCOIN_x1" target="_blank" rel="noopener" class="btn btn-outline">Follow on X</a>
@@ -894,7 +942,109 @@
     </div>
   </footer>
 
+  <!-- FLOATING CONTRACT -->
+  <div id="float-container" aria-hidden="true"></div>
+
+  <style>
+    #float-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+      overflow: hidden;
+    }
+    .float-ca {
+      position: absolute;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: rgba(0, 255, 65, 0.18);
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      pointer-events: all;
+      cursor: pointer;
+      animation: floatDrift linear infinite;
+      transition: color 0.15s, text-shadow 0.15s;
+    }
+    .float-ca:hover {
+      color: rgba(0, 255, 65, 0.95);
+      text-shadow: 0 0 12px rgba(0,255,65,0.7);
+    }
+    @keyframes floatDrift {
+      0%   { transform: translateY(100vh) rotate(var(--tilt)); opacity: 0; }
+      8%   { opacity: 1; }
+      92%  { opacity: 1; }
+      100% { transform: translateY(-20vh) rotate(var(--tilt)); opacity: 0; }
+    }
+    #copy-toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--green);
+      color: #000;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 12px 28px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 9997;
+    }
+    #copy-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+
+  <!-- COPY TOAST -->
+  <div id="copy-toast">CA COPIED ✓</div>
+
   <script>
+    // Floating contract address — click to copy
+    const CA = 'FNTAYeScNadrUFnKTeaxnosR9no7rWpQoKuSD4zyZDV3';
+    const container = document.getElementById('float-container');
+    const toast = document.getElementById('copy-toast');
+    const COUNT = 8;
+    let toastTimer;
+
+    function copyCA2() {
+      navigator.clipboard.writeText(CA).then(() => {
+        clearTimeout(toastTimer);
+        toast.classList.add('show');
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+      });
+    }
+
+    function copyCA() {
+      navigator.clipboard.writeText(CA).then(() => {
+        clearTimeout(toastTimer);
+        toast.classList.add('show');
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+      });
+    }
+
+    function spawnCA() {
+      const el = document.createElement('div');
+      el.className = 'float-ca';
+      el.textContent = CA;
+      el.title = 'Click to copy contract address';
+      el.addEventListener('click', copyCA);
+      const left = Math.random() * 90;
+      const duration = 18 + Math.random() * 20;
+      const delay = Math.random() * 15;
+      const tilt = (Math.random() * 20 - 10).toFixed(1) + 'deg';
+      el.style.cssText = `left:${left}%;--tilt:${tilt};animation-duration:${duration}s;animation-delay:${delay}s;`;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.remove();
+        spawnCA();
+      }, (duration + delay) * 1000 + 500);
+    }
+
+    for (let i = 0; i < COUNT; i++) spawnCA();
+
     // FAQ accordion
     document.querySelectorAll('.faq-q').forEach(btn => {
       btn.addEventListener('click', () => {
