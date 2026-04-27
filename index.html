@@ -111,6 +111,48 @@
     }
     .ca-strip:hover .ca-copy-icon { opacity: 1; }
 
+
+    /* ---- GAME SECTION ---- */
+    .game-section {
+      padding: 80px 20px 60px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .game-embed-wrapper {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      border: 1px solid #111;
+      background: #050505;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-embed-wrapper::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .game-embed-wrapper iframe {
+      width: 100%;
+      height: 680px;
+      border: none;
+      display: block;
+    }
+
+    @media (max-width: 500px) {
+      .game-embed-wrapper iframe { height: 620px; }
+    }
+
     /* ---- TICKER ---- */
     .ticker-bar {
       background: var(--green);
@@ -927,6 +969,15 @@
       <div class="faq-a">We have no roadmap. We have no timeline. We have vibes. The moon is a state of mind.</div>
     </div>
 
+  </section>
+
+
+  <!-- GAME SECTION -->
+  <section class="game-section reveal" id="game">
+    <div class="section-label">// Degen Tic-Tac-Toe — Beat the Bots</div>
+    <div class="game-embed-wrapper">
+      <iframe src="game.html" title="$USELESS Degen Tic-Tac-Toe" scrolling="no" allow="clipboard-write"></iframe>
+    </div>
   </section>
 
   <!-- FOOTER -->
