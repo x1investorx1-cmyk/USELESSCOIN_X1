@@ -113,8 +113,77 @@
 
 
     /* ---- GAME SECTION ---- */
+    /* ---- HERO TITLE ROW ---- */
+    .hero-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .side-game {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      opacity: 0;
+      animation: fadeInSide 1s ease 0.8s forwards;
+    }
+
+    @keyframes fadeInSide {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .mini-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: #111;
+      border: 1px solid #1a1a1a;
+      width: 90px;
+      height: 90px;
+    }
+
+    .mini-cell {
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.1s;
+      position: relative;
+    }
+    .mini-cell:hover:not(.taken):not(.locked) { background: #111; }
+    .mini-cell.taken, .mini-cell.locked { cursor: default; }
+    .mini-cell .mmark { animation: mpop 0.15s ease-out; display: block; line-height: 1; }
+    @keyframes mpop { from { transform: scale(0.3); opacity:0; } to { transform: scale(1); opacity:1; } }
+    .mini-x { color: var(--green); }
+    .mini-o { color: var(--red); }
+    .mini-cell.mini-win { background: #0d0d0d; box-shadow: inset 0 0 0 1px var(--yellow); }
+
+    .mini-label {
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      color: #222;
+      text-align: center;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .mini-label:hover { color: var(--green); }
+
+    @media (max-width: 700px) {
+      .side-game { display: none; }
+    }
+
+    /* ---- GAME SECTION ---- */
     .game-section {
-      padding: 80px 20px 60px;
+      padding: 60px 20px 40px;
       max-width: 900px;
       margin: 0 auto;
       width: 100%;
@@ -122,7 +191,7 @@
 
     .game-embed-wrapper {
       width: 100%;
-      max-width: 480px;
+      max-width: 360px;
       margin: 0 auto;
       border: 1px solid #111;
       background: #050505;
@@ -144,13 +213,13 @@
 
     .game-embed-wrapper iframe {
       width: 100%;
-      height: 680px;
+      height: 560px;
       border: none;
       display: block;
     }
 
     @media (max-width: 500px) {
-      .game-embed-wrapper iframe { height: 620px; }
+      .game-embed-wrapper iframe { height: 520px; }
     }
 
     /* ---- TICKER ---- */
@@ -790,9 +859,21 @@
       </div>
     </div>
 
-    <h1>
-      <span class="glitch" data-text="USELESS">USELESS</span>
-    </h1>
+    <div class="hero-title-row">
+      <div class="side-game left-game" id="game-left">
+        <div class="mini-board" id="mini-board-left"></div>
+        <div class="mini-label">BEAT THE BOT</div>
+      </div>
+
+      <h1>
+        <span class="glitch" data-text="USELESS">USELESS</span>
+      </h1>
+
+      <div class="side-game right-game" id="game-right">
+        <div class="mini-board" id="mini-board-right"></div>
+        <div class="mini-label">BEAT THE BOT</div>
+      </div>
+    </div>
     <div class="ticker-symbol">$USELESS &nbsp;/&nbsp; X1 BLOCKCHAIN</div>
     <p class="hero-tagline">
       zero utility. zero promises. zero roadmap.<br>
@@ -1095,6 +1176,97 @@
     }
 
     for (let i = 0; i < COUNT; i++) spawnCA();
+
+    // ── MINI GAMES (hero sides) ──
+    const MINI_WINS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+    function initMiniGame(boardId) {
+      const el = document.getElementById(boardId);
+      if (!el) return;
+      const state = { board: Array(9).fill(null), over: false, playerTurn: true };
+      el.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'mini-cell';
+        cell.id = boardId + '-c' + i;
+        cell.onclick = () => miniMove(boardId, state, i);
+        el.appendChild(cell);
+      }
+      return state;
+    }
+
+    function miniMove(boardId, state, idx) {
+      if (state.over || !state.playerTurn || state.board[idx]) return;
+      miniPlace(boardId, state, idx, 'X');
+      if (miniCheckEnd(boardId, state)) return;
+      state.playerTurn = false;
+      miniLock(boardId);
+      setTimeout(() => {
+        const empty = state.board.map((v,i) => v ? null : i).filter(i => i !== null);
+        if (!empty.length) return;
+        // Simple bot: win > block > random
+        let move = -1;
+        for (const m of empty) { const t=[...state.board]; t[m]='O'; if (miniGetWin(t)) { move=m; break; } }
+        if (move === -1) for (const m of empty) { const t=[...state.board]; t[m]='X'; if (miniGetWin(t)) { move=m; break; } }
+        if (move === -1) move = empty[Math.floor(Math.random()*empty.length)];
+        miniPlace(boardId, state, move, 'O');
+        if (miniCheckEnd(boardId, state)) return;
+        state.playerTurn = true;
+        miniUnlock(boardId, state);
+      }, 350);
+    }
+
+    function miniPlace(boardId, state, idx, sym) {
+      state.board[idx] = sym;
+      const cell = document.getElementById(boardId + '-c' + idx);
+      const span = document.createElement('span');
+      span.className = 'mmark mini-' + sym.toLowerCase();
+      span.textContent = sym;
+      cell.appendChild(span);
+      cell.classList.add('taken');
+    }
+
+    function miniCheckEnd(boardId, state) {
+      const line = miniGetWin(state.board);
+      if (line) {
+        line.forEach(i => document.getElementById(boardId+'-c'+i).classList.add('mini-win'));
+        state.over = true;
+        miniLock(boardId);
+        setTimeout(() => initMiniGame(boardId) && (state.board=Array(9).fill(null), state.over=false, state.playerTurn=true) || resetMiniState(boardId, state), 1200);
+        return true;
+      }
+      if (state.board.every(c => c)) {
+        state.over = true;
+        setTimeout(() => resetMiniState(boardId, state), 900);
+        return true;
+      }
+      return false;
+    }
+
+    function resetMiniState(boardId, state) {
+      const newState = initMiniGame(boardId);
+      state.board = newState.board; state.over = false; state.playerTurn = true;
+    }
+
+    function miniGetWin(b) {
+      for (const [a,c,d] of MINI_WINS) if (b[a] && b[a]===b[c] && b[a]===b[d]) return [a,c,d];
+      return null;
+    }
+
+    function miniLock(boardId) {
+      document.querySelectorAll('#'+boardId+' .mini-cell:not(.taken)').forEach(c => c.classList.add('locked'));
+    }
+    function miniUnlock(boardId, state) {
+      document.querySelectorAll('#'+boardId+' .mini-cell').forEach(c => c.classList.remove('locked'));
+    }
+
+    // Init both side games
+    const stateLeft  = initMiniGame('mini-board-left');
+    const stateRight = initMiniGame('mini-board-right');
+    // Make label click restart
+    document.querySelectorAll('.mini-label').forEach((lbl, i) => {
+      lbl.onclick = () => i === 0 ? resetMiniState('mini-board-left', stateLeft) : resetMiniState('mini-board-right', stateRight);
+    });
 
     // FAQ accordion
     document.querySelectorAll('.faq-q').forEach(btn => {
