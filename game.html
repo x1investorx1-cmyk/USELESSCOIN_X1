@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>$USELESS — Degen Tic-Tac-Toe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=VT323&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080808;
+      --green: #00ff41;
+      --red: #ff2d55;
+      --yellow: #ffe600;
+      --white: #f0f0f0;
+      --dim: #0d0d0d;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: transparent;
+      color: var(--white);
+      font-family: 'Share Tech Mono', monospace;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 12px 20px;
+      gap: 14px;
+      cursor: crosshair;
+    }
+
+    /* BOT PICKER */
+    .bot-picker-label {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      color: #333;
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 4px;
+    }
+
+    .bot-picker {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      width: 100%;
+      max-width: 400px;
+      background: #111;
+      border: 1px solid #111;
+    }
+
+    .bot-card {
+      background: var(--bg);
+      padding: 8px 4px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s;
+      border: 1px solid transparent;
+      position: relative;
+    }
+    .bot-card:hover { background: #111; }
+    .bot-card.selected { border-color: var(--green); background: #0a0a0a; }
+
+    .bot-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 15px;
+      letter-spacing: 0.05em;
+      color: var(--white);
+      line-height: 1;
+    }
+    .bot-card.selected .bot-name { color: var(--green); }
+
+    .bot-elo {
+      font-size: 9px;
+      color: #333;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+    .bot-card.selected .bot-elo { color: #555; }
+
+    .bot-xp-bar {
+      width: 100%;
+      height: 2px;
+      background: #111;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .bot-xp-fill {
+      height: 100%;
+      background: var(--green);
+      transition: width 0.6s ease;
+    }
+
+    .bot-level-badge {
+      position: absolute;
+      top: 3px; right: 3px;
+      font-size: 8px;
+      color: var(--yellow);
+      letter-spacing: 0;
+    }
+
+    /* SCOREBOARD */
+    .scoreboard {
+      width: 100%; max-width: 400px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      background: #111; border: 1px solid #111; gap: 1px;
+    }
+    .score-block { background: var(--bg); padding: 10px 8px; text-align: center; }
+    .score-name  { font-size: 9px; letter-spacing: 0.2em; color: #444; margin-bottom: 3px; }
+    .score-val   { font-family: 'Bebas Neue', sans-serif; font-size: 34px; line-height: 1; }
+    .score-you   { color: var(--green); }
+    .score-bot   { color: var(--red); }
+    .score-divider {
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: #1a1a1a; padding: 0 4px;
+    }
+
+    /* STATUS */
+    .status-bar {
+      width: 100%; max-width: 400px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--dim); border: 1px solid #111;
+    }
+    .player-tag { display: flex; align-items: center; gap: 6px; }
+    .player-sym { font-family: 'Bebas Neue', sans-serif; font-size: 22px; }
+    .sym-x { color: var(--green); }
+    .sym-o { color: var(--red); }
+    .turn-msg {
+      font-family: 'VT323', monospace; font-size: 17px;
+      letter-spacing: 0.08em; text-align: center;
+    }
+    .turn-you  { color: var(--green); animation: blink-t 1s step-end infinite; }
+    .turn-bot  { color: #444; }
+    .turn-over { color: var(--yellow); animation: none; }
+    @keyframes blink-t { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    /* BOARD */
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px; background: #111; border: 1px solid #111;
+      width: 100%; max-width: 400px;
+    }
+    .cell {
+      background: var(--bg);
+      aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(44px, 13vw, 72px);
+      cursor: pointer; transition: background 0.1s;
+      position: relative; overflow: hidden; user-select: none;
+    }
+    .cell:hover:not(.taken):not(.locked) { background: #0e0e0e; }
+    .cell:hover:not(.taken):not(.locked)::after {
+      content: 'X'; color: rgba(0,255,65,0.1);
+      font-family: 'Bebas Neue', sans-serif; font-size: inherit; position: absolute;
+    }
+    .cell.taken, .cell.locked { cursor: default; }
+    .mark { animation: pop 0.18s cubic-bezier(.175,.885,.32,1.275); display: block; line-height: 1; }
+    @keyframes pop {
+      0%   { transform: scale(0.2) rotate(-10deg); opacity: 0; }
+      70%  { transform: scale(1.2) rotate(3deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    .mark-x { color: var(--green); text-shadow: 0 0 16px rgba(0,255,65,0.6); }
+    .mark-o { color: var(--red);   text-shadow: 0 0 16px rgba(255,45,85,0.6); }
+    .cell.winning-cell { background: #0c0c0c; animation: win-pulse 0.5s ease infinite alternate; }
+    @keyframes win-pulse {
+      from { box-shadow: inset 0 0 0 2px rgba(255,230,0,0.3); }
+      to   { box-shadow: inset 0 0 0 2px var(--yellow); }
+    }
+
+    /* BOT CHAT BUBBLE */
+    .bot-bubble {
+      width: 100%; max-width: 400px;
+      min-height: 36px;
+      background: #0a0a0a;
+      border: 1px solid #111;
+      border-left: 2px solid var(--red);
+      padding: 8px 12px;
+      font-family: 'VT323', monospace;
+      font-size: 16px;
+      color: #555;
+      letter-spacing: 0.05em;
+      transition: color 0.3s;
+    }
+    .bot-bubble.active { color: var(--red); }
+
+    /* RESULT */
+    .result-banner {
+      width: 100%; max-width: 400px;
+      padding: 14px; text-align: center;
+      background: var(--dim); border: 1px solid #111;
+      display: none; flex-direction: column; gap: 4px;
+    }
+    .result-banner.show { display: flex; }
+    .result-title { font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 0.06em; line-height: 1; }
+    .r-win  { color: var(--yellow); text-shadow: 0 0 20px rgba(255,230,0,0.4); }
+    .r-lose { color: var(--red); }
+    .r-draw { color: #555; }
+    .result-quip { font-family: 'VT323', monospace; font-size: 16px; color: #444; letter-spacing: 0.05em; }
+
+    /* LEVEL UP */
+    .levelup-toast {
+      position: fixed; bottom: 12px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--yellow); color: #000;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px; letter-spacing: 0.1em;
+      padding: 10px 24px;
+      opacity: 0; transition: opacity 0.2s, transform 0.2s;
+      z-index: 999; pointer-events: none;
+    }
+    .levelup-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* BUTTONS */
+    .btn-row { display: flex; gap: 6px; width: 100%; max-width: 400px; }
+    .btn {
+      flex: 1;
+      font-family: 'Share Tech Mono', monospace; font-size: 11px;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 11px 8px; border: 2px solid;
+      cursor: pointer; background: transparent; transition: all 0.15s;
+      text-decoration: none; text-align: center; display: inline-block;
+    }
+    .btn-green { color: #000; background: var(--green); border-color: var(--green); }
+    .btn-green:hover { box-shadow: 0 0 24px rgba(0,255,65,0.5); }
+    .btn-outline { color: var(--white); border-color: #222; }
+    .btn-outline:hover { border-color: #555; background: #0d0d0d; }
+  </style>
+</head>
+<body>
+
+  <!-- BOT PICKER -->
+  <div class="bot-picker-label">// CHOOSE YOUR OPPONENT</div>
+  <div class="bot-picker" id="bot-picker"></div>
+
+  <!-- SCORES -->
+  <div class="scoreboard">
+    <div class="score-block">
+      <div class="score-name">YOU (X)</div>
+      <div class="score-val score-you" id="score-you">0</div>
+    </div>
+    <div class="score-divider">VS</div>
+    <div class="score-block">
+      <div class="score-name" id="bot-score-label">BOT (O)</div>
+      <div class="score-val score-bot" id="score-bot">0</div>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="status-bar">
+    <div class="player-tag">
+      <span class="player-sym sym-x">X</span>
+      <span style="font-size:10px;color:#333;letter-spacing:0.1em">YOU</span>
+    </div>
+    <div class="turn-msg turn-you" id="turn-msg">YOUR TURN</div>
+    <div class="player-tag">
+      <span style="font-size:10px;color:#333;letter-spacing:0.1em" id="bot-tag-name">BOT</span>
+      <span class="player-sym sym-o">O</span>
+    </div>
+  </div>
+
+  <!-- BOARD -->
+  <div class="board" id="board">
+    <div class="cell" id="c0" onclick="move(0)"></div>
+    <div class="cell" id="c1" onclick="move(1)"></div>
+    <div class="cell" id="c2" onclick="move(2)"></div>
+    <div class="cell" id="c3" onclick="move(3)"></div>
+    <div class="cell" id="c4" onclick="move(4)"></div>
+    <div class="cell" id="c5" onclick="move(5)"></div>
+    <div class="cell" id="c6" onclick="move(6)"></div>
+    <div class="cell" id="c7" onclick="move(7)"></div>
+    <div class="cell" id="c8" onclick="move(8)"></div>
+  </div>
+
+  <!-- BOT SPEECH BUBBLE -->
+  <div class="bot-bubble" id="bot-bubble">...</div>
+
+  <!-- RESULT -->
+  <div class="result-banner" id="result-banner">
+    <div class="result-title" id="result-title"></div>
+    <div class="result-quip"  id="result-quip"></div>
+  </div>
+
+  <!-- BUTTONS -->
+  <div class="btn-row">
+    <button class="btn btn-green" onclick="resetGame()">⚡ New Game</button>
+  </div>
+
+  <div class="levelup-toast" id="levelup-toast"></div>
+
+<script>
+// ─────────────────────────────────────────
+// BOT DEFINITIONS — names, personalities, learning
+// ─────────────────────────────────────────
+const BOT_DEFS = [
+  {
+    id: 'jack',
+    name: 'JACK',
+    color: '#00ff41',
+    taunt:   ["Your move, rookie.", "I've seen better.", "Too slow.", "Predictable.", "Come on."],
+    win:     ["GG. No rematch.", "Jack wins. Again.", "Don't cry.", "Skill issue.", "Easy."],
+    lose:    ["Fluke. Total fluke.", "I let you win.", "Won't happen twice.", "Lucky degen.", "Fine. Fine."],
+    draw:    ["Boring.", "A draw? Really?", "I expected more.", "Meh.", "Next time."],
+    think:   ["JACK IS CALCULATING...", "JACK SEES ALL...", "PROCESSING..."]
+  },
+  {
+    id: 'levin',
+    name: 'LEVIN',
+    color: '#ffe600',
+    taunt:   ["Interesting choice...", "I'm watching patterns.", "Noted.", "Hmm.", "You think that'll work?"],
+    win:     ["Pattern detected. Pattern exploited.", "I learn fast.", "Data processed. You lost.", "As expected.", "Statistically inevitable."],
+    lose:    ["Anomaly detected.", "New data acquired.", "Updating model...", "You broke my pattern.", "Recalibrating."],
+    draw:    ["Optimal play. Stalemate.", "Even match. For now.", "Balance achieved.", "I expected this.", "The math checks out."],
+    think:   ["LEVIN ANALYZING...", "RUNNING MODELS...", "LEVIN PREDICTS..."]
+  },
+  {
+    id: 'axel',
+    name: 'AXEL',
+    color: '#ff2d55',
+    taunt:   ["LET'S GOOO", "YOLO MOVE", "DEGEN ENERGY", "FULL SEND", "NO FEAR"],
+    win:     ["AXEL WINS BABY", "GOAT STATUS", "REKT", "TOO EASY", "GG EZ"],
+    lose:    ["NAH THIS RIGGED", "REMATCH RN", "CAUGHT OFF GUARD", "FLUKE DETECTED", "FINE U GOT ME"],
+    draw:    ["TIE?? UNACCEPTABLE", "BOTH DEGENS", "CHAOS ACHIEVED", "DRAW = BORING", "NEXT GAME LFG"],
+    think:   ["AXEL GOING FULL SEND...", "YOLO MODE...", "CHAOS PLAY INCOMING..."]
+  },
+  {
+    id: 'xentzu',
+    name: 'XENTZU',
+    color: '#a855f7',
+    taunt:   ["The board is a battlefield.", "Every move has a cost.", "You cannot win what you cannot see.", "Patience.", "Think deeper."],
+    win:     ["The wise bot wins without fighting.", "Your defeat was certain from move one.", "Strategy > luck.", "I saw this coming.", "The patient bot prevails."],
+    lose:    ["You have fought well.", "I underestimated chaos.", "The student surprises the master.", "Honorable win.", "The board humbles all."],
+    draw:    ["Two minds in balance.", "Neither wins. Neither loses. All is chaos.", "A worthy opponent.", "Harmony. For now.", "We are equally matched."],
+    think:   ["XENTZU MEDITATES...", "CONSULTING THE VOID...", "XENTZU WEIGHS ALL PATHS..."]
+  },
+  {
+    id: 'x1',
+    name: 'X1',
+    color: '#00cfff',
+    taunt:   ["X1 ONLINE.", "Processing move...", "Network stable.", "Running optimal path.", "No delays."],
+    win:     ["X1 DOMINATES.", "Execution: perfect.", "Blockchain confirmed: I won.", "Zero errors. Win secured.", "Transaction complete. You lost."],
+    lose:    ["Error detected.", "Unexpected outcome. Logging.", "You exploited a gap.", "Rollback initiated.", "Bug found. Patching."],
+    draw:    ["Tie. Acceptable outcome.", "Consensus reached.", "Both nodes equal.", "Network balanced.", "Draw confirmed on-chain."],
+    think:   ["X1 SYNCING...", "CHAIN CONFIRMING...", "X1 EXECUTING..."]
+  },
+  {
+    id: 'chain',
+    name: 'CHAIN',
+    color: '#ff9900',
+    taunt:   ["Block confirmed.", "Immutable moves only.", "No take-backs on chain.", "Trustless game.", "Decentralized chaos."],
+    win:     ["Finalized on-chain.", "Block sealed. You lost.", "Consensus: CHAIN wins.", "Immutable result.", "Can't rug this win."],
+    lose:    ["Fork detected.", "Consensus failure.", "51% attack on my strategy.", "Invalid block. You win.", "Unexpected fork. Respect."],
+    draw:    ["Split consensus.", "Two chains. One board.", "No majority. No winner.", "Decentralized draw.", "Community vote: tie."],
+    think:   ["CHAIN VALIDATING...", "MINING BEST MOVE...", "BLOCK BUILDING..."]
+  },
+  {
+    id: 'xen',
+    name: 'XEN',
+    color: '#e879f9',
+    taunt:   ["Trust. Simplicity. Chaos.", "The game is the proof.", "Self-proof of play.", "No promises. Just moves.", "XEN sees all."],
+    win:     ["Proof of work: complete.", "Self-sovereign win.", "XEN ALWAYS WINS.", "The proof is in the loss.", "Verified. You lost."],
+    lose:    ["Not enough proof.", "You out-xenned me.", "Rare occurrence.", "The community wins.", "I'll mint this loss as an NFT."],
+    draw:    ["Two truths. One board.", "XEN draws. XEN wins anyway.", "Symbolic tie.", "The universe is balanced.", "We are all XEN."],
+    think:   ["XEN SELF-COMPUTING...", "PROOF OF THINK...", "XEN CALCULATING..."]
+  }
+];
+
+// ─────────────────────────────────────────
+// LEARNING ENGINE — persisted via localStorage
+// Each bot tracks: wins, losses, draws, xp, level
+// and a move-weight table that shifts with outcomes
+// ─────────────────────────────────────────
+const WINS_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const XP_PER_WIN = 30;
+const XP_PER_DRAW = 10;
+const XP_PER_LOSS = 5;
+const XP_PER_LEVEL = 100;
+
+function loadBotData() {
+  try {
+    const saved = localStorage.getItem('useless_bots');
+    return saved ? JSON.parse(saved) : {};
+  } catch(e) { return {}; }
+}
+
+function saveBotData(data) {
+  try { localStorage.setItem('useless_bots', JSON.stringify(data)); } catch(e) {}
+}
+
+function getBotState(id) {
+  const all = loadBotData();
+  if (!all[id]) {
+    all[id] = { wins:0, losses:0, draws:0, xp:0, level:1, weights: defaultWeights() };
+    saveBotData(all);
+  }
+  return all[id];
+}
+
+function setBotState(id, state) {
+  const all = loadBotData();
+  all[id] = state;
+  saveBotData(all);
+}
+
+// Position weights: how much the bot "prefers" each cell
+// [centre, corners, edges] — adjusted by learning
+function defaultWeights() {
+  return [1,1,1,1,1,1,1,1,1]; // index 0–8
+}
+
+// ─────────────────────────────────────────
+// GAME STATE
+// ─────────────────────────────────────────
+let board = Array(9).fill(null);
+let gameOver = false;
+let playerTurn = true;
+let selectedBotId = 'jack';
+let currentBotDef = BOT_DEFS[0];
+let scores = { you: 0, bot: 0 };
+let playerMoves = []; // track player's moves this game for learning
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+function init() {
+  renderBotPicker();
+  selectBot('jack');
+}
+
+function renderBotPicker() {
+  const picker = document.getElementById('bot-picker');
+  picker.innerHTML = '';
+  BOT_DEFS.forEach(bot => {
+    const state = getBotState(bot.id);
+    const xpPct = ((state.xp % XP_PER_LEVEL) / XP_PER_LEVEL * 100).toFixed(0);
+    const card = document.createElement('div');
+    card.className = 'bot-card';
+    card.id = 'bot-card-' + bot.id;
+    card.onclick = () => selectBot(bot.id);
+    card.innerHTML = `
+      <div class="bot-level-badge">Lv${state.level}</div>
+      <div class="bot-name" style="color:${bot.color}">${bot.name}</div>
+      <div class="bot-elo">${state.wins}W ${state.losses}L ${state.draws}D</div>
+      <div class="bot-xp-bar"><div class="bot-xp-fill" style="width:${xpPct}%;background:${bot.color}"></div></div>
+    `;
+    picker.appendChild(card);
+  });
+}
+
+function selectBot(id) {
+  selectedBotId = id;
+  currentBotDef = BOT_DEFS.find(b => b.id === id);
+  document.querySelectorAll('.bot-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('bot-card-' + id).classList.add('selected');
+  document.getElementById('bot-tag-name').textContent = currentBotDef.name;
+  document.getElementById('bot-score-label').textContent = currentBotDef.name + ' (O)';
+  scores = { you: 0, bot: 0 };
+  document.getElementById('score-you').textContent = '0';
+  document.getElementById('score-bot').textContent = '0';
+  setBotBubble(rnd(currentBotDef.taunt));
+  resetGame();
+}
+
+// ─────────────────────────────────────────
+// GAMEPLAY
+// ─────────────────────────────────────────
+function move(idx) {
+  if (gameOver || !playerTurn || board[idx]) return;
+  playerMoves.push(idx);
+  placeMarker(idx, 'X');
+  if (checkEnd()) return;
+  playerTurn = false;
+  lockBoard();
+  setTurnMsg('bot');
+  setBotBubble(rnd(currentBotDef.think), true);
+  const state = getBotState(selectedBotId);
+  const delay = Math.max(300, 700 - (state.level * 40)); // higher level = faster response
+  setTimeout(botMove, delay + Math.random() * 200);
+}
+
+function botMove() {
+  const idx = getBotMove();
+  placeMarker(idx, 'O');
+  if (checkEnd()) return;
+  setBotBubble(rnd(currentBotDef.taunt));
+  playerTurn = true;
+  unlockBoard();
+  setTurnMsg('you');
+}
+
+function placeMarker(idx, sym) {
+  board[idx] = sym;
+  const cell = document.getElementById('c' + idx);
+  const span = document.createElement('span');
+  span.className = 'mark mark-' + sym.toLowerCase();
+  span.textContent = sym;
+  cell.appendChild(span);
+  cell.classList.add('taken');
+}
+
+// ─────────────────────────────────────────
+// BOT AI — level-scaled intelligence
+// ─────────────────────────────────────────
+function getBotMove() {
+  const state = getBotState(selectedBotId);
+  const level = state.level;
+  const empty = board.map((v,i) => v ? null : i).filter(i => i !== null);
+
+  // Level 1–2: mostly random, occasionally blocks
+  if (level <= 2) {
+    if (Math.random() < 0.25) {
+      const blk = findThreat('X'); if (blk !== -1) return blk;
+    }
+    return weightedRandom(empty, state.weights);
+  }
+
+  // Level 3–4: blocks, sometimes wins, weighted random
+  if (level <= 4) {
+    const win = findThreat('O'); if (win !== -1) return win;
+    if (Math.random() < 0.6) { const blk = findThreat('X'); if (blk !== -1) return blk; }
+    return weightedRandom(empty, state.weights);
+  }
+
+  // Level 5–6: always wins/blocks, uses weights for rest
+  if (level <= 6) {
+    const win = findThreat('O'); if (win !== -1) return win;
+    const blk = findThreat('X'); if (blk !== -1) return blk;
+    return weightedRandom(empty, state.weights);
+  }
+
+  // Level 7–9: near-perfect + weights
+  if (level <= 9) {
+    const win = findThreat('O'); if (win !== -1) return win;
+    const blk = findThreat('X'); if (blk !== -1) return blk;
+    if (!board[4]) return 4;
+    return weightedRandom(empty, state.weights);
+  }
+
+  // Level 10+: full minimax — unbeatable
+  return minimax([...board], 'O').idx;
+}
+
+function weightedRandom(empty, weights) {
+  const validWeights = empty.map(i => Math.max(0.1, weights[i]));
+  const total = validWeights.reduce((a,b) => a+b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < empty.length; i++) {
+    r -= validWeights[i];
+    if (r <= 0) return empty[i];
+  }
+  return empty[empty.length - 1];
+}
+
+function findThreat(sym) {
+  const empty = board.map((v,i) => v ? null : i).filter(i => i !== null);
+  for (const i of empty) {
+    const t = [...board]; t[i] = sym;
+    if (getWinLine(t)) return i;
+  }
+  return -1;
+}
+
+function minimax(b, turn) {
+  const line = getWinLine(b);
+  if (line) return { score: b[line[0]] === 'O' ? 10 : -10 };
+  const empty = b.map((v,i) => v ? null : i).filter(i => i !== null);
+  if (!empty.length) return { score: 0 };
+  const moves = empty.map(i => {
+    const nb = [...b]; nb[i] = turn;
+    return { idx: i, score: minimax(nb, turn === 'O' ? 'X' : 'O').score };
+  });
+  return turn === 'O'
+    ? moves.reduce((a,b) => b.score > a.score ? b : a)
+    : moves.reduce((a,b) => b.score < a.score ? b : a);
+}
+
+// ─────────────────────────────────────────
+// LEARNING — update weights + xp after game
+// ─────────────────────────────────────────
+function learnFromGame(outcome) {
+  const state = getBotState(selectedBotId);
+
+  // Give XP
+  if (outcome === 'bot_win')  { state.wins++;   state.xp += XP_PER_WIN; }
+  if (outcome === 'you_win')  { state.losses++; state.xp += XP_PER_LOSS; }
+  if (outcome === 'draw')     { state.draws++;  state.xp += XP_PER_DRAW; }
+
+  // Level up check
+  const newLevel = Math.floor(state.xp / XP_PER_LEVEL) + 1;
+  const leveledUp = newLevel > state.level;
+  state.level = newLevel;
+
+  // Adjust weights based on outcome
+  // If bot won: boost cells the bot used this game (encourage repetition)
+  // If bot lost: boost cells the player used (bot should contest those next time)
+  const botCells  = board.map((v,i) => v === 'O' ? i : null).filter(i => i !== null);
+  const youCells  = playerMoves;
+
+  if (outcome === 'bot_win') {
+    botCells.forEach(i => { state.weights[i] = Math.min(5, state.weights[i] + 0.3); });
+  }
+  if (outcome === 'you_win') {
+    youCells.forEach(i => { state.weights[i] = Math.min(5, state.weights[i] + 0.4); });
+    botCells.forEach(i => { state.weights[i] = Math.max(0.1, state.weights[i] - 0.1); });
+  }
+  if (outcome === 'draw') {
+    botCells.forEach(i => { state.weights[i] = Math.min(5, state.weights[i] + 0.1); });
+  }
+
+  setBotState(selectedBotId, state);
+
+  // Refresh bot picker card
+  const xpPct = ((state.xp % XP_PER_LEVEL) / XP_PER_LEVEL * 100).toFixed(0);
+  const card = document.getElementById('bot-card-' + selectedBotId);
+  if (card) {
+    card.querySelector('.bot-level-badge').textContent = 'Lv' + state.level;
+    card.querySelector('.bot-elo').textContent = `${state.wins}W ${state.losses}L ${state.draws}D`;
+    card.querySelector('.bot-xp-fill').style.width = xpPct + '%';
+  }
+
+  if (leveledUp) {
+    showLevelUp(currentBotDef.name + ' LEVELED UP! LV' + state.level);
+  }
+}
+
+// ─────────────────────────────────────────
+// CHECK END
+// ─────────────────────────────────────────
+function checkEnd() {
+  const line = getWinLine(board);
+  if (line) {
+    line.forEach(i => document.getElementById('c' + i).classList.add('winning-cell'));
+    const youWon = board[line[0]] === 'X';
+    if (youWon) scores.you++; else scores.bot++;
+    updateScores();
+    const outcome = youWon ? 'you_win' : 'bot_win';
+    learnFromGame(outcome);
+    setBotBubble(rnd(youWon ? currentBotDef.lose : currentBotDef.win));
+    showResult(
+      youWon ? 'YOU WIN 🟩' : currentBotDef.name + ' WINS',
+      youWon ? rnd(WIN_QUIPS) : rnd(LOSE_QUIPS),
+      youWon ? 'r-win' : 'r-lose'
+    );
+    gameOver = true; return true;
+  }
+  if (board.every(c => c)) {
+    learnFromGame('draw');
+    setBotBubble(rnd(currentBotDef.draw));
+    showResult('DRAW', rnd(DRAW_QUIPS), 'r-draw');
+    gameOver = true; return true;
+  }
+  return false;
+}
+
+// ─────────────────────────────────────────
+// UI HELPERS
+// ─────────────────────────────────────────
+const WIN_QUIPS  = ["Zero utility. Max skill.", "Not useless after all.", "Pure chaos. Pure win.", "NGMI... oh wait, you GM'd.", "Beating a bot. A degen victory."];
+const LOSE_QUIPS = ["No utility = no defence.", "Rekt by a machine. Classic degen.", "Maximum vibes. Minimum skill.", "No promises, no wins.", "The bot had zero roadmap and still won."];
+const DRAW_QUIPS = ["Zero winners. Maximum chaos.", "Both equally useless.", "A draw. How very on-brand.", "Perfectly balanced. As all things should be."];
+
+function getWinLine(b) {
+  for (const [a,c,d] of WINS_LINES) if (b[a] && b[a]===b[c] && b[a]===b[d]) return [a,c,d];
+  return null;
+}
+
+function lockBoard()   { document.querySelectorAll('.cell:not(.taken)').forEach(c => c.classList.add('locked')); }
+function unlockBoard() { document.querySelectorAll('.cell').forEach(c => c.classList.remove('locked')); }
+
+function setTurnMsg(who) {
+  const el = document.getElementById('turn-msg');
+  const map = {
+    you:  ['YOUR TURN',              'turn-msg turn-you'],
+    bot:  [currentBotDef.name + "'S TURN", 'turn-msg turn-bot'],
+    over: ['GAME OVER',              'turn-msg turn-over']
+  };
+  el.textContent = map[who][0];
+  el.className   = map[who][1];
+}
+
+function setBotBubble(text, active = false) {
+  const el = document.getElementById('bot-bubble');
+  el.textContent = currentBotDef.name + ': "' + text + '"';
+  el.className = 'bot-bubble' + (active ? ' active' : '');
+}
+
+function showResult(title, quip, cls) {
+  const b = document.getElementById('result-banner');
+  const t = document.getElementById('result-title');
+  t.textContent = title; t.className = 'result-title ' + cls;
+  document.getElementById('result-quip').textContent = quip;
+  b.classList.add('show');
+  setTurnMsg('over');
+  lockBoard();
+}
+
+function updateScores() {
+  document.getElementById('score-you').textContent = scores.you;
+  document.getElementById('score-bot').textContent = scores.bot;
+}
+
+function showLevelUp(msg) {
+  const el = document.getElementById('levelup-toast');
+  el.textContent = '⚡ ' + msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function resetGame() {
+  board = Array(9).fill(null);
+  gameOver = false; playerTurn = true;
+  playerMoves = [];
+  document.querySelectorAll('.cell').forEach(c => { c.innerHTML = ''; c.className = 'cell'; });
+  document.getElementById('result-banner').classList.remove('show');
+  setTurnMsg('you');
+  setBotBubble(rnd(currentBotDef.taunt));
+}
+
+function rnd(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+init();
+</script>
+</body>
+</html>
