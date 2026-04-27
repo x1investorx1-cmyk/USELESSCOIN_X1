@@ -509,45 +509,70 @@ function placeMarker(idx, sym) {
 }
 
 // ─────────────────────────────────────────
-// BOT AI — level-scaled intelligence
 // ─────────────────────────────────────────
-function getBotMove() {
-  const state = getBotState(selectedBotId);
-  const level = state.level;
+// BOT AI — fully rewritten, level-scaled
+// ─────────────────────────────────────────
+
+// Fixed minimax with depth so bot prefers fastest wins & delays losses
+function minimax(b, turn, depth) {
+  const line = getWinLine(b);
+  if (line) return { score: b[line[0]] === 'O' ? 10 - depth : depth - 10 };
+  const empty = b.map((v,i) => v ? null : i).filter(i => i !== null);
+  if (!empty.length) return { score: 0 };
+  const moves = [];
+  for (const i of empty) {
+    const nb = [...b]; nb[i] = turn;
+    const result = minimax(nb, turn === 'O' ? 'X' : 'O', depth + 1);
+    moves.push({ idx: i, score: result.score });
+  }
+  return turn === 'O'
+    ? moves.reduce((a,b) => b.score > a.score ? b : a)
+    : moves.reduce((a,b) => b.score < a.score ? b : a);
+}
+
+// Find immediate win or block move for sym
+function findThreat(sym) {
   const empty = board.map((v,i) => v ? null : i).filter(i => i !== null);
+  for (const i of empty) {
+    const t = [...board]; t[i] = sym;
+    if (getWinLine(t)) return i;
+  }
+  return -1;
+}
 
-  // Level 1–2: mostly random, occasionally blocks
-  if (level <= 2) {
-    if (Math.random() < 0.25) {
-      const blk = findThreat('X'); if (blk !== -1) return blk;
+// Detect fork: a move that creates TWO simultaneous win threats
+function findFork(sym) {
+  const empty = board.map((v,i) => v ? null : i).filter(i => i !== null);
+  for (const i of empty) {
+    const t = [...board]; t[i] = sym;
+    let threats = 0;
+    for (const j of empty) {
+      if (j === i) continue;
+      const t2 = [...t]; t2[j] = sym;
+      if (getWinLine(t2)) threats++;
     }
-    return weightedRandom(empty, state.weights);
+    if (threats >= 2) return i;
   }
+  return -1;
+}
 
-  // Level 3–4: blocks, sometimes wins, weighted random
-  if (level <= 4) {
-    const win = findThreat('O'); if (win !== -1) return win;
-    if (Math.random() < 0.6) { const blk = findThreat('X'); if (blk !== -1) return blk; }
-    return weightedRandom(empty, state.weights);
+// Strategic positional play: centre > opposite corner > corner > edge
+function strategicMove() {
+  const empty = board.map((v,i) => v ? null : i).filter(i => i !== null);
+  // Centre
+  if (!board[4]) return 4;
+  // Opposite corner strategy: if player took a corner, take opposite
+  const oppCorners = [[0,8],[2,6],[6,2],[8,0]];
+  for (const [mine, opp] of oppCorners) {
+    if (board[opp] === 'X' && !board[mine]) return mine;
   }
-
-  // Level 5–6: always wins/blocks, uses weights for rest
-  if (level <= 6) {
-    const win = findThreat('O'); if (win !== -1) return win;
-    const blk = findThreat('X'); if (blk !== -1) return blk;
-    return weightedRandom(empty, state.weights);
-  }
-
-  // Level 7–9: near-perfect + weights
-  if (level <= 9) {
-    const win = findThreat('O'); if (win !== -1) return win;
-    const blk = findThreat('X'); if (blk !== -1) return blk;
-    if (!board[4]) return 4;
-    return weightedRandom(empty, state.weights);
-  }
-
-  // Level 10+: full minimax — unbeatable
-  return minimax([...board], 'O').idx;
+  // Any empty corner
+  const corners = [0,2,6,8].filter(i => !board[i]);
+  if (corners.length) return corners[Math.floor(Math.random() * corners.length)];
+  // Any empty edge
+  const edges = [1,3,5,7].filter(i => !board[i]);
+  if (edges.length) return edges[Math.floor(Math.random() * edges.length)];
+  return empty[Math.floor(Math.random() * empty.length)];
 }
 
 function weightedRandom(empty, weights) {
@@ -561,27 +586,80 @@ function weightedRandom(empty, weights) {
   return empty[empty.length - 1];
 }
 
-function findThreat(sym) {
+function getBotMove() {
+  const state = getBotState(selectedBotId);
+  const level = state.level;
   const empty = board.map((v,i) => v ? null : i).filter(i => i !== null);
-  for (const i of empty) {
-    const t = [...board]; t[i] = sym;
-    if (getWinLine(t)) return i;
-  }
-  return -1;
-}
+  if (!empty.length) return -1;
 
-function minimax(b, turn) {
-  const line = getWinLine(b);
-  if (line) return { score: b[line[0]] === 'O' ? 10 : -10 };
-  const empty = b.map((v,i) => v ? null : i).filter(i => i !== null);
-  if (!empty.length) return { score: 0 };
-  const moves = empty.map(i => {
-    const nb = [...b]; nb[i] = turn;
-    return { idx: i, score: minimax(nb, turn === 'O' ? 'X' : 'O').score };
-  });
-  return turn === 'O'
-    ? moves.reduce((a,b) => b.score > a.score ? b : a)
-    : moves.reduce((a,b) => b.score < a.score ? b : a);
+  // ── LEVEL 1: Mostly random, rarely blocks ──
+  if (level <= 1) {
+    if (Math.random() < 0.2) {
+      const blk = findThreat('X'); if (blk !== -1) return blk;
+    }
+    return empty[Math.floor(Math.random() * empty.length)];
+  }
+
+  // ── LEVEL 2: Always takes win, sometimes blocks, random rest ──
+  if (level <= 2) {
+    const win = findThreat('O'); if (win !== -1) return win;
+    if (Math.random() < 0.5) { const blk = findThreat('X'); if (blk !== -1) return blk; }
+    return empty[Math.floor(Math.random() * empty.length)];
+  }
+
+  // ── LEVEL 3: Always wins + blocks, no strategy ──
+  if (level <= 3) {
+    const win = findThreat('O'); if (win !== -1) return win;
+    const blk = findThreat('X'); if (blk !== -1) return blk;
+    return empty[Math.floor(Math.random() * empty.length)];
+  }
+
+  // ── LEVEL 4–5: Wins, blocks, basic positional (centre/corners) ──
+  if (level <= 5) {
+    const win = findThreat('O'); if (win !== -1) return win;
+    const blk = findThreat('X'); if (blk !== -1) return blk;
+    if (!board[4]) return 4;
+    const corners = [0,2,6,8].filter(i => !board[i]);
+    if (corners.length && Math.random() < 0.7)
+      return corners[Math.floor(Math.random() * corners.length)];
+    return empty[Math.floor(Math.random() * empty.length)];
+  }
+
+  // ── LEVEL 6–7: Wins, blocks, fork attacks, full strategy ──
+  if (level <= 7) {
+    const win = findThreat('O'); if (win !== -1) return win;
+    const blk = findThreat('X'); if (blk !== -1) return blk;
+    const fork = findFork('O'); if (fork !== -1) return fork;
+    const blockFork = findFork('X'); if (blockFork !== -1) return blockFork;
+    return strategicMove();
+  }
+
+  // ── LEVEL 8–9: Near-perfect — partial minimax (depth 4) ──
+  if (level <= 9) {
+    const win = findThreat('O'); if (win !== -1) return win;
+    const blk = findThreat('X'); if (blk !== -1) return blk;
+    const fork = findFork('O'); if (fork !== -1) return fork;
+    const blockFork = findFork('X'); if (blockFork !== -1) return blockFork;
+    // Minimax limited to depth 4 — strong but not perfect
+    function limitedMinimax(b, turn, depth) {
+      if (depth >= 4) return { score: 0 };
+      const line = getWinLine(b);
+      if (line) return { score: b[line[0]] === 'O' ? 10 - depth : depth - 10 };
+      const emp = b.map((v,i) => v ? null : i).filter(i => i !== null);
+      if (!emp.length) return { score: 0 };
+      const moves = emp.map(i => {
+        const nb = [...b]; nb[i] = turn;
+        return { idx: i, score: limitedMinimax(nb, turn === 'O' ? 'X' : 'O', depth + 1).score };
+      });
+      return turn === 'O'
+        ? moves.reduce((a,b) => b.score > a.score ? b : a)
+        : moves.reduce((a,b) => b.score < a.score ? b : a);
+    }
+    return limitedMinimax([...board], 'O', 0).idx;
+  }
+
+  // ── LEVEL 10+: Full minimax with depth — completely unbeatable ──
+  return minimax([...board], 'O', 0).idx;
 }
 
 // ─────────────────────────────────────────
